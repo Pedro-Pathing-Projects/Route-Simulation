@@ -40,15 +40,6 @@ public class Panel extends JPanel {
         setStartNode(3,6);
         setGoalNode(30, 20);
 
-        setSolidNode(5, 10);
-        setSolidNode(5, 7);
-        setSolidNode(6, 7);
-        setSolidNode(7, 7);
-        setSolidNode(5, 8);
-        setSolidNode(5, 8);
-        setSolidNode(5, 8);
-        setSolidNode(5, 9);
-
         setCostOnNodes();
     }
 
@@ -94,10 +85,6 @@ public class Panel extends JPanel {
 
         // F cost
         node.fCost = node.gCost + node.hCost;
-
-        if(node != startNode && node != goalNode) {
-            //could add text ig
-        }
     }
 
     public void search() {

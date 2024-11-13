@@ -58,6 +58,7 @@ public class Node extends JButton implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        setBackground(Color.yellow);
+
+        setAsSolid();
     }
 }
