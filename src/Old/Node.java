@@ -27,18 +27,18 @@ public class Node extends JButton implements ActionListener {
     }
 
     public void setAsStart() {
-        start = true;
         setBackground(Color.green);
+        start = true;
     }
 
     public void setAsGoal() {
-        goal = true;
         setBackground(Color.red);
+        goal = true;
     }
 
     public void setAsSolid() {
-        solid = true;
         setBackground(Color.black);
+        solid = true;
     }
 
     public void setAsOpen() {
@@ -58,7 +58,6 @@ public class Node extends JButton implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
-        setAsSolid();
+        //setAsSolid();
     }
 }

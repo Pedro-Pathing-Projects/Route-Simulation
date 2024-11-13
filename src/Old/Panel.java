@@ -37,8 +37,16 @@ public class Panel extends JPanel {
             }
         }
 
-        setStartNode(3,6);
-        setGoalNode(30, 20);
+        setStartNode(1,1);
+        setGoalNode(maxCol-2, maxRow-2);
+
+        setSolidNode(1, 10);
+        setSolidNode(2, 9);
+        setSolidNode(3, 8);
+        setSolidNode(4, 7);
+        setSolidNode(5, 6);
+        setSolidNode(6, 5);
+
 
         setCostOnNodes();
     }
@@ -198,7 +206,7 @@ public class Panel extends JPanel {
     }
 
     private void trackPath() {
-        Node current  = goalNode;
+        Node current = goalNode;
 
         while (current != startNode) {
             current = current.parent;
