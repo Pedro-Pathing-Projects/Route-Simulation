@@ -32,7 +32,7 @@ public class Panel extends JPanel {
             }
         }
 
-        setStartNode(1, 1);
+        setStartNode(2, 4);
         setGoalNode(maxCol - 2, maxRow - 2);
 
         setSolidNode(2, 9);
