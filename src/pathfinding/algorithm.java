@@ -2,8 +2,11 @@ package pathfinding;
 
 import java.util.ArrayList;
 import java.util.Observable;
+
+import pathfinding.element.Grid;
 import pathfinding.element.Network;
 import pathfinding.element.Node;
+import pathfinding.element.Tile;
 
 public class algorithm extends Observable {
 
@@ -119,6 +122,12 @@ public class algorithm extends Observable {
 
     public Network getNetwork() {
         return network;
+    }
+
+    public void setNetwork(Network network) {
+        reset();
+        this.network = network;
+        updateUI();
     }
 
     public ArrayList<Node> getPath() {

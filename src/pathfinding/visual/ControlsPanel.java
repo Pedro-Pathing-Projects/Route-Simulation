@@ -1,27 +1,32 @@
 package pathfinding.visual;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import pathfinding.element.Grid;
-import pathfinding.element.Network;
 import pathfinding.element.Tile;
 import java.awt.Color;
 import java.awt.Label;
 import java.awt.event.ActionEvent;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 public class ControlsPanel extends JPanel {
 
     private pathfinding.algorithm algorithm;
     private SelectionType selectionType;
-    
+    private Grid currentGrid;
+
     private  JComboBox<String> selector;
 
     public ControlsPanel(int width, int height, pathfinding.algorithm algorithm) {
 
         this.algorithm = algorithm;
         this.selectionType = SelectionType.START;
+        currentGrid = (Grid) algorithm.getNetwork();
 
         setBorder(new LineBorder(Color.gray));
         setLayout(null);
@@ -61,14 +66,41 @@ public class ControlsPanel extends JPanel {
         field.addActionListener((ActionEvent ae) -> {
             algorithm.reset();
             algorithm.updateUI();
-            selectionType = SelectionType.START;
+            //PLACEHOLDER
         });
         add(field);
 
+        JButton save = new JButton("Save");
+        save.setBounds(10, height+40, 80, 30);
+        save.addActionListener((ActionEvent ae) -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int option = fileChooser.showSaveDialog(null);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                saveGrid(file, currentGrid);
+            }
+        });
+        add(save);
+
+        JButton load = new JButton("Load");
+        load.setBounds(100, height+40, 80, 30);
+        load.addActionListener((ActionEvent ae) -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int option = fileChooser.showOpenDialog(null);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                loadGrid(file);
+            }
+        });
+        add(load);
+
     }
-   /* public void setFieldNetwork() {
-        algorithm.setNetwork(fieldNetwork);
-    }*/
+
+    public void setGrid(Grid grid){
+        currentGrid = grid;
+        algorithm.setNetwork(currentGrid);
+        updateUI();
+    }
 
     public void selectTile(Tile t) {
 
@@ -93,6 +125,26 @@ public class ControlsPanel extends JPanel {
 
     private enum SelectionType {
         START, END, REVERSE
+    }
+
+    private void saveGrid(File file, Grid grid) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(grid, Grid.class);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadGrid(File file) {
+        Gson gson = new Gson();
+        try {
+            Grid grid = gson.fromJson(new FileReader(file), Grid.class);
+            setGrid(grid);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

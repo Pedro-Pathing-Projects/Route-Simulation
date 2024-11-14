@@ -1,5 +1,4 @@
 import javax.swing.JFrame;
-import java.awt.*;
 
 public class Window {
     public static void main(String[] args) {
