@@ -3,17 +3,14 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 
 public class Panel extends JPanel {
     final int maxCol = 36;
     final int maxRow = 36;
     final int nodeSize = 25;
-    final int screenWidth = (nodeSize * maxCol) + 409;
+    final int screenWidth = (nodeSize * maxCol) + 333;
     final int screenHeight = (nodeSize * maxRow);
 
     NodeType mouseState = NodeType.OPEN;
@@ -39,7 +36,7 @@ public class Panel extends JPanel {
                 node.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        handleLeftClick(e);  // Call handleLeftClick when the node is clicked
+                        handleMouse(e);  // Call handleLeftClick when the node is clicked
                     }
                 });
                 nodes.add(node);  // Store in flat list
@@ -47,10 +44,6 @@ public class Panel extends JPanel {
 
             }
         }
-
-        setStartNode(1, 1);
-        setGoalNode(maxCol - 2, maxRow - 2);
-        setCostOnNodes();
 
         // Create the run button
         JButton runButton = new JButton("Run");
@@ -62,17 +55,6 @@ public class Panel extends JPanel {
         });
 
 // Create the reset button
-        JButton exportButton = new JButton("Export");
-        exportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    exportNodes();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
 
         // Create the buttons
         JButton startButton = new JButton("Start");
@@ -116,6 +98,31 @@ public class Panel extends JPanel {
             }
         });
 
+        JButton exportButton = new JButton("Export");
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    exportNodes();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        JButton importButton = new JButton("Import");
+        importButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    importNodes();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+
 // Add the buttons to the buttonPanel
 
 // Set the layout of the Panel to BorderLayout
@@ -134,11 +141,14 @@ public class Panel extends JPanel {
 // Add the buttons to the east of the Panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(runButton);
-        buttonPanel.add(exportButton);
+
         buttonPanel.add(startButton);
         buttonPanel.add(goalButton);
         buttonPanel.add(openButton);
         buttonPanel.add(solidButton);
+      //  buttonPanel.add(exportButton);
+       // buttonPanel.add(importButton);
+        System.out.println(buttonPanel.getPreferredSize());
         this.add(buttonPanel, BorderLayout.EAST);
     }
 
@@ -151,6 +161,26 @@ public class Panel extends JPanel {
         br.write(nodes.toString());
         br.flush();
         br.close();
+    }
+
+    private void importNodes() throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("nodes.txt"));
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] nodeProperties = line.split(",");
+            int col = Integer.parseInt(nodeProperties[0]);
+            int row = Integer.parseInt(nodeProperties[1]);
+            NodeType type = NodeType.valueOf(nodeProperties[2]);
+            int gCost = Integer.parseInt(nodeProperties[3]);
+            int hCost = Integer.parseInt(nodeProperties[4]);
+            int fCost = Integer.parseInt(nodeProperties[5]);
+            Node parent = null;
+            boolean checked = Boolean.parseBoolean(nodeProperties[6]);
+            Node node = new Node(col, row, type, gCost, hCost, fCost, parent, checked);
+            nodes.add(node);
+        }
+        br.close();
+        System.out.println(nodes);
     }
 
     // Helper method to get the node at a given column and row
@@ -208,7 +238,7 @@ public class Panel extends JPanel {
 
     public void autoSearch() {
         long startTime = System.currentTimeMillis();  // Start timing
-
+        setCostOnNodes();
         while (!goalReached && step < 3000) {
             int col = currentNode.col;
             int row = currentNode.row;
@@ -329,6 +359,8 @@ public class Panel extends JPanel {
                 current.setAsPath();
             }
         }
+
+        goalNode.setAsGoal();
     }
 
     private void setMouseState(NodeType state) {
@@ -361,19 +393,14 @@ public class Panel extends JPanel {
         // Update the node based on the mouse state
         switch (mouseState) {
             case START:
-                // Ensure only one start node
-                if (startNode != null) {
-                    startNode.setAsOpen();  // Reset the previous start node
-                }
+                //startNode.setAsOpen();
                 clickedNode.setAsStart();
                 startNode = clickedNode;
+                currentNode = clickedNode;
                 break;
 
             case GOAL:
-                // Ensure only one goal node
-                if (goalNode != null) {
-                    goalNode.setAsOpen();  // Reset the previous goal node
-                }
+                //goalNode.setAsOpen();
                 clickedNode.setAsGoal();
                 goalNode = clickedNode;
                 break;
@@ -389,5 +416,28 @@ public class Panel extends JPanel {
 
         // Repaint the panel to update the visual representation
         repaint();
+    }
+
+
+    private void handleRightClick(MouseEvent e) {
+        // Get the clicked node
+        Node clickedNode = (Node) e.getSource();
+
+        // Update the node based on the mouse state
+        clickedNode.setAsOpen();
+
+        // Repaint the panel to update the visual representation
+        repaint();
+    }
+
+
+    private void handleMouse(MouseEvent e) {
+        if(e.getButton() == MouseEvent.BUTTON1_DOWN_MASK) {
+            handleLeftClick(e);
+        } else if (e.getButton() == MouseEvent.BUTTON1) {
+            handleLeftClick(e);
+        } else if (e.getButton() == MouseEvent.BUTTON2) {
+            handleRightClick(e);
+        }
     }
 }

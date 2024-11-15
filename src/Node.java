@@ -17,6 +17,21 @@ public class Node extends JButton {
         setFocusable(false);
     }
 
+
+    public Node(int col, int row, NodeType type, int gCost, int hCost, int fCost, Node parent, boolean checked) {
+        this.col = col;
+        this.row = row;
+        this.gCost = gCost;
+        this.hCost = hCost;
+        this.fCost = fCost;
+        this.parent = parent;
+        this.checked = checked;
+        setBackground(Color.white);
+        setForeground(Color.black);
+        setFocusable(false);
+        this.type = type;
+    }
+
     public void reset() {
         parent = null;
         gCost = 0;
