@@ -1,13 +1,22 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Panel extends JPanel {
     final int maxCol = 36;
     final int maxRow = 36;
     final int nodeSize = 25;
-    final int screenWidth = nodeSize * maxCol;
-    final int screenHeight = nodeSize * maxRow;
+    final int screenWidth = (nodeSize * maxCol) + 409;
+    final int screenHeight = (nodeSize * maxRow);
+
+    NodeType mouseState = NodeType.OPEN;
 
     int step = 0;
 
@@ -27,38 +36,121 @@ public class Panel extends JPanel {
         for (int row = 0; row < maxRow; row++) {
             for (int col = 0; col < maxCol; col++) {
                 Node node = new Node(col, row);
+                node.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        handleLeftClick(e);  // Call handleLeftClick when the node is clicked
+                    }
+                });
                 nodes.add(node);  // Store in flat list
                 this.add(node);   // Add to GUI
+
             }
         }
 
-        setStartNode(2, 4);
+        setStartNode(1, 1);
         setGoalNode(maxCol - 2, maxRow - 2);
-
-        setSolidNode(2, 9);
-        setSolidNode(2, 10);
-        setSolidNode(3, 8);
-        setSolidNode(3, 9);
-        setSolidNode(4, 7);
-        setSolidNode(4, 8);
-        setSolidNode(5, 6);
-        setSolidNode(5, 7);
-        setSolidNode(6, 5);
-        setSolidNode(6, 6);
-        setSolidNode(7, 5);
-        setSolidNode(7, 6);
-        setSolidNode(8, 4);
-        setSolidNode(8, 5);
-        setSolidNode(9, 3);
-        setSolidNode(9, 4);
-        setSolidNode(10, 2);
-        setSolidNode(10, 3);
-        setSolidNode(11, 1);
-        setSolidNode(11, 2);
-        setSolidNode(12, 0);
-        setSolidNode(12, 1);
-
         setCostOnNodes();
+
+        // Create the run button
+        JButton runButton = new JButton("Run");
+        runButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                autoSearch();
+            }
+        });
+
+// Create the reset button
+        JButton exportButton = new JButton("Export");
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    exportNodes();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        // Create the buttons
+        JButton startButton = new JButton("Start");
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set the mouse state to start
+                setMouseState(NodeType.START);
+                printMouseState();
+            }
+        });
+
+        JButton solidButton = new JButton("Solid");
+        solidButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set the mouse state to solid
+                setMouseState(NodeType.SOLID);
+                printMouseState();
+            }
+        });
+
+
+        JButton openButton = new JButton("Open");
+        openButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set the mouse state to open
+                setMouseState(NodeType.OPEN);
+                printMouseState();
+            }
+        });
+
+        JButton goalButton = new JButton("Goal");
+        goalButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set the mouse state to goal
+                setMouseState(NodeType.GOAL);
+                printMouseState();
+            }
+        });
+
+// Add the buttons to the buttonPanel
+
+// Set the layout of the Panel to BorderLayout
+        this.setLayout(new BorderLayout());
+
+// Add the grid to the center of the Panel
+        JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol));
+        for (int row = 0; row < maxRow; row++) {
+            for (int col = 0; col < maxCol; col++) {
+                Node node = getNodeAt(col, row);
+                gridPanel.add(node);
+            }
+        }
+        this.add(gridPanel, BorderLayout.CENTER);
+
+// Add the buttons to the east of the Panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(runButton);
+        buttonPanel.add(exportButton);
+        buttonPanel.add(startButton);
+        buttonPanel.add(goalButton);
+        buttonPanel.add(openButton);
+        buttonPanel.add(solidButton);
+        this.add(buttonPanel, BorderLayout.EAST);
+    }
+
+    public void printMouseState() {
+        System.out.println("Mouse State: " + mouseState);
+    }
+
+    private void exportNodes() throws IOException {
+        BufferedWriter br = new BufferedWriter(new FileWriter("nodes.txt"));
+        br.write(nodes.toString());
+        br.flush();
+        br.close();
     }
 
     // Helper method to get the node at a given column and row
@@ -98,7 +190,7 @@ public class Panel extends JPanel {
         int yDistance = Math.abs(node.row - startNode.row);
         if (xDistance == 1 && yDistance == 1) {
             // Diagonal move
-            node.gCost = (int)(1.4 * (xDistance + yDistance));
+            node.gCost = (int) (1.4 * (xDistance + yDistance));
         } else {
             // Horizontal/Vertical move
             node.gCost = xDistance + yDistance;
@@ -112,7 +204,6 @@ public class Panel extends JPanel {
         // F cost
         node.fCost = node.gCost + node.hCost;
     }
-
 
 
     public void autoSearch() {
@@ -183,7 +274,7 @@ public class Panel extends JPanel {
         long duration = endTime - startTime;  // Calculate duration
 
         // Display duration in a popup
-        JOptionPane.showMessageDialog(null, "Search completed in " + duration + " milliseconds.");
+        //JOptionPane.showMessageDialog(null, "Search completed in " + duration + " milliseconds.");
     }
 
     private Node getBestNode() {
@@ -203,7 +294,7 @@ public class Panel extends JPanel {
     }
 
     private void openNode(Node node) {
-        if (node == null || node.checked || node.solid) {
+        if (node == null || node.checked || node.type == NodeType.SOLID) {
             return;
         }
 
@@ -238,5 +329,65 @@ public class Panel extends JPanel {
                 current.setAsPath();
             }
         }
+    }
+
+    private void setMouseState(NodeType state) {
+        // Set the mouse state
+        mouseState = state;
+
+        // Update the nodes based on the mouse state
+        for (Node node : nodes) {
+            if (node.isMouseOver()) {
+                // Update the node based on the mouse state
+                switch (state) {
+                    case START:
+                        node.setAsStart();
+                        break;
+                    case SOLID:
+                        node.setAsSolid();
+                        break;
+                    default:
+                        node.setAsOpen();
+                        break;
+                }
+            }
+        }
+    }
+
+    private void handleLeftClick(MouseEvent e) {
+        // Get the clicked node
+        Node clickedNode = (Node) e.getSource();
+
+        // Update the node based on the mouse state
+        switch (mouseState) {
+            case START:
+                // Ensure only one start node
+                if (startNode != null) {
+                    startNode.setAsOpen();  // Reset the previous start node
+                }
+                clickedNode.setAsStart();
+                startNode = clickedNode;
+                break;
+
+            case GOAL:
+                // Ensure only one goal node
+                if (goalNode != null) {
+                    goalNode.setAsOpen();  // Reset the previous goal node
+                }
+                clickedNode.setAsGoal();
+                goalNode = clickedNode;
+                break;
+
+            case SOLID:
+                clickedNode.setAsSolid();
+                break;
+
+            default:
+                clickedNode.setAsOpen();
+                break;
+        }
+
+        // Repaint the panel to update the visual representation
+        repaint();
     }
 }

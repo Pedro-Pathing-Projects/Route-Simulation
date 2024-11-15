@@ -6,7 +6,8 @@ public class Node extends JButton {
     Node parent;
     int col, row;
     int gCost, hCost, fCost;
-    boolean start, goal, solid, open, checked;
+    boolean checked;
+    NodeType type = NodeType.OPEN;
 
     public Node(int col, int row) {
         this.col = col;
@@ -16,34 +17,57 @@ public class Node extends JButton {
         setFocusable(false);
     }
 
+    public void reset() {
+        parent = null;
+        gCost = 0;
+        hCost = 0;
+        fCost = 0;
+        type = NodeType.OPEN;
+        checked = false;
+    }
+
     public void setAsStart() {
         setBackground(Color.green);
-        start = true;
+        type = NodeType.START;
+        repaint();
     }
 
     public void setAsGoal() {
         setBackground(Color.red);
-        goal = true;
+        type = NodeType.GOAL;
+        repaint();
     }
 
     public void setAsSolid() {
         setBackground(Color.black);
-        solid = true;
+        type = NodeType.SOLID;
+        repaint();
     }
 
     public void setAsOpen() {
         setBackground(Color.white);
-        open = true;
+        type = NodeType.OPEN;
+        repaint();
     }
 
     public void setAsChecked() {
-        if (!start && !goal) {
+        if (!NodeType.START.equals(type) && !NodeType.GOAL.equals(type)) {
             setBackground(Color.orange);
         }
         checked = true;
+        repaint();
     }
 
     public void setAsPath() {
         setBackground(Color.blue);
+        repaint();
+    }
+
+    public boolean isMouseOver() {
+        return getBounds().contains(MouseInfo.getPointerInfo().getLocation());
+    }
+
+    public Point getLocation() {
+        return MouseInfo.getPointerInfo().getLocation();
     }
 }
