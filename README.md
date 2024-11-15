@@ -1,1 +1,1 @@
-This is a simulator to test our equations before we try to implement them in Pedro Pathing! Hehe!
+# A Simulator to test our equations before implementation into Pedro
