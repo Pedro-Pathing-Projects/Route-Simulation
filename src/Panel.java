@@ -41,11 +41,13 @@ public class Panel extends JPanel {
     boolean goalReached = false;
 
     public Panel() {
-        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
-        this.setBackground(Color.WHITE);
-        this.setFocusable(true);
+        this.setLayout(new BorderLayout());
 
-        // Initialize the nodes and add to the flat list
+        // Create grid panel
+        JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol));
+        gridPanel.setBackground(Color.WHITE);
+
+        // Add nodes to grid panel
         for (int row = 0; row < maxRow; row++) {
             for (int col = 0; col < maxCol; col++) {
                 Node node = new Node(col, row);
@@ -56,66 +58,104 @@ public class Panel extends JPanel {
                     }
                 });
                 nodes.add(node);
-                this.add(node);
+                gridPanel.add(node);
             }
         }
 
-        // Buttons and layout setup
-        JButton runButton = new JButton("Run");
+        // Create button panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(4, 2, 10, 10)); // 4 rows, 2 columns, spacing
+        buttonPanel.setBackground(new Color(240, 240, 240));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding
+
+        // Buttons
+        JButton runButton = createStyledButton("Run");
         runButton.addActionListener(e -> autoSearch());
 
-        JButton resetButton = new JButton("Reset");
-        resetButton.addActionListener(e -> resetGrid());
+        JButton resetButton = createStyledButton("Reset");
+        resetButton.addActionListener(e -> {
+            resetGrid();
+            JOptionPane.showMessageDialog(null, "Grid has been reset.");
+        });
 
-        JButton startButton = new JButton("Start");
-        startButton.addActionListener(e -> setMouseState(NodeType.START));
+        JButton startButton = createStyledButton("Set Start");
+        startButton.addActionListener(e -> {
+            setMouseState(NodeType.START);
+            JOptionPane.showMessageDialog(null, "Click on a node to set it as the Start node.");
+        });
 
-        JButton solidButton = new JButton("Solid");
-        solidButton.addActionListener(e -> setMouseState(NodeType.SOLID));
+        JButton goalButton = createStyledButton("Set Goal");
+        goalButton.addActionListener(e -> {
+            setMouseState(NodeType.GOAL);
+            JOptionPane.showMessageDialog(null, "Click on a node to set it as the Goal node.");
+        });
 
-        JButton openButton = new JButton("Open");
-        openButton.addActionListener(e -> setMouseState(NodeType.OPEN));
+        JButton solidButton = createStyledButton("Set Solid");
+        solidButton.addActionListener(e -> {
+            setMouseState(NodeType.SOLID);
+            JOptionPane.showMessageDialog(null, "Click on nodes to set them as Solid.");
+        });
 
-        JButton goalButton = new JButton("Goal");
-        goalButton.addActionListener(e -> setMouseState(NodeType.GOAL));
+        JButton openButton = createStyledButton("Set Open");
+        openButton.addActionListener(e -> {
+            setMouseState(NodeType.OPEN);
+            JOptionPane.showMessageDialog(null, "Click on nodes to set them as Open.");
+        });
 
-        JButton fillSolidButton = new JButton("Fill Solid");
-        fillSolidButton.addActionListener(e -> activateFillSolidMode());
+        JButton fillSolidButton = createStyledButton("Fill Solid");
+        fillSolidButton.addActionListener(e -> {
+            activateFillSolidMode();
+            JOptionPane.showMessageDialog(null, "Select 4 corner nodes to fill the area as Solid.");
+        });
 
-        // Add a new button to set boundary distance
-        JButton boundaryDistanceButton = new JButton("Boundary Distance");
-        boundaryDistanceButton.addActionListener(e -> setBoundaryDistance());
+        JButton boundaryButton = createStyledButton("Boundary Distance");
+        boundaryButton.addActionListener(e -> setBoundaryDistance());
 
-
-        JPanel buttonPanel = new JPanel();
+        // Add buttons to button panel
         buttonPanel.add(runButton);
+        buttonPanel.add(resetButton);
         buttonPanel.add(startButton);
         buttonPanel.add(goalButton);
-        buttonPanel.add(openButton);
         buttonPanel.add(solidButton);
-        buttonPanel.add(resetButton);
+        buttonPanel.add(openButton);
         buttonPanel.add(fillSolidButton);
-        buttonPanel.add(boundaryDistanceButton);
+        buttonPanel.add(boundaryButton);
 
-        JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol)) {
+        // Split pane
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gridPanel, buttonPanel);
+        splitPane.setDividerLocation(800); // Adjust width of the grid panel
+        splitPane.setResizeWeight(0.8); // Grid panel takes 80% of the space
+        splitPane.setEnabled(false); // Disable resizing by the user
+
+        // Add split pane to main panel
+        this.add(splitPane, BorderLayout.CENTER);
+
+        System.out.print(buttonPanel.getPreferredSize());
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setBackground(new Color(70, 130, 180)); // Steel Blue (solid infill)
+        button.setForeground(Color.WHITE); // Text color
+        button.setOpaque(true); // Ensures solid background
+        button.setBorderPainted(false); // Removes default border outline
+
+        // Add hover effect for solid fill
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (backgroundImage != null) {
-                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-                }
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(new Color(100, 149, 237)); // Cornflower Blue (hover infill)
             }
-        };
 
-        for (int row = 0; row < maxRow; row++) {
-            for (int col = 0; col < maxCol; col++) {
-                gridPanel.add(getNodeAt(col, row));
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(new Color(70, 130, 180)); // Steel Blue (default infill)
             }
-        }
+        });
 
-        this.setLayout(new BorderLayout());
-        this.add(gridPanel, BorderLayout.CENTER);
-        this.add(buttonPanel, BorderLayout.EAST);
+        return button;
     }
 
     private void setBoundaryDistance() {
@@ -414,29 +454,32 @@ public class Panel extends JPanel {
     }
 
     private void handleMouse(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (e.getButton() == MouseEvent.BUTTON1) { // Left mouse click
             Node clickedNode = (Node) e.getSource();
 
+            // Check if filling a solid area
             if (mouseState == NodeType.OPEN && selectedNodes.size() < 4) {
                 handleFillSolid(clickedNode);
                 return;
             }
 
+            // Prevent modification of boundary nodes
             if (clickedNode.type == NodeType.BOUNDARY) {
                 JOptionPane.showMessageDialog(null, "Cannot modify boundary nodes.");
                 return;
             }
 
+            // Handle different mouse states
             switch (mouseState) {
                 case START:
-                    if (startNode != null && startNode != clickedNode) startNode.setAsOpen();
+                    if (startNode != null && startNode != clickedNode) startNode.setAsOpen(); // Reset previous start node
                     clickedNode.setAsStart();
                     startNode = clickedNode;
-                    currentNode = clickedNode;
+                    currentNode = clickedNode; // Initialize current node
                     break;
 
                 case GOAL:
-                    if (goalNode != null && goalNode != clickedNode) goalNode.setAsOpen();
+                    if (goalNode != null && goalNode != clickedNode) goalNode.setAsOpen(); // Reset previous goal node
                     clickedNode.setAsGoal();
                     goalNode = clickedNode;
                     break;
@@ -446,10 +489,10 @@ public class Panel extends JPanel {
                     break;
 
                 default:
-                    clickedNode.setAsOpen();
+                    clickedNode.setAsOpen(); // Default case for other types
             }
         }
-        repaint();
+        repaint(); // Repaint the grid after handling the mouse event
     }
 
     private void setMouseState(NodeType state) {
