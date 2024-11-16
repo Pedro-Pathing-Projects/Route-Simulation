@@ -26,7 +26,7 @@ public class Panel extends JPanel {
     final int maxCol = fieldInchesX / nodeInches;
     final int maxRow = fieldInchesY / nodeInches;
     final int nodeScreenSize = 25;
-    final int screenWidth = (nodeScreenSize * maxCol) + 333;
+    final int screenWidth = (nodeScreenSize * maxCol) + 405;
     final int screenHeight = (nodeScreenSize * maxRow);
 
     NodeType mouseState = NodeType.OPEN;
@@ -72,6 +72,13 @@ public class Panel extends JPanel {
         });
 
 // Create the reset button
+        JButton resetButton = new JButton("Reset");
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetGrid();
+            }
+        });
 
         // Create the buttons
         JButton startButton = new JButton("Start");
@@ -177,6 +184,7 @@ public class Panel extends JPanel {
         buttonPanel.add(goalButton);
         buttonPanel.add(openButton);
         buttonPanel.add(solidButton);
+        buttonPanel.add(resetButton);
         //  buttonPanel.add(exportButton);
         // buttonPanel.add(importButton);
         System.out.println(buttonPanel.getPreferredSize());
@@ -353,24 +361,6 @@ public class Panel extends JPanel {
         //JOptionPane.showMessageDialog(null, "Search completed in " + duration + " milliseconds.");
     }
 
-
-
-    private Node getBestNode() {
-        Node bestNode = null;
-        int bestFCost = Integer.MAX_VALUE;
-        int bestGCost = Integer.MAX_VALUE;
-
-        // Iterate over openList to find node with lowest fCost, and if tied, lowest gCost
-        for (Node node : openList) {
-            if (node.fCost < bestFCost || (node.fCost == bestFCost && node.gCost < bestGCost)) {
-                bestFCost = node.fCost;
-                bestGCost = node.gCost;
-                bestNode = node;
-            }
-        }
-        return bestNode;
-    }
-
     private void openNode(Node node) {
         if (node == null || node.checked || node.type == NodeType.SOLID || !canRobotOccupy(node)) {
             return;
@@ -543,6 +533,22 @@ public class Panel extends JPanel {
         return (angle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
     }
 
+    public void resetGrid() {
+        currentNode = null;
+        startNode = null;
+        goalNode = null;
+        checkedList.clear();
+        openList.clear();
+
+        for (int row = 0; row < maxRow; row++) {
+            for (int col = 0; col < maxCol; col++) {
+                Node n = getNodeAt(col, row);
+                n.reset();
+                openList.add(n);
+                repaint();
+            }
+        }
+    }
 
 
 

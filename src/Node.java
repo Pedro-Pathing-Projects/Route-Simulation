@@ -32,6 +32,7 @@ public class Node extends JButton {
         hCost = 0;
         fCost = 0;
         type = NodeType.OPEN;
+        path = false;
         checked = false;
         repaint();
     }
