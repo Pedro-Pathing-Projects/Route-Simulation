@@ -64,70 +64,82 @@ public class Panel extends JPanel {
 
         // Create button panel
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(4, 2, 10, 10)); // 4 rows, 2 columns, spacing
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setBackground(new Color(240, 240, 240));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding
 
-        // Buttons
+// Action Buttons Group
+        JPanel actionPanel = new JPanel(new GridLayout(3, 2, 5, 5)); // 3 rows, 2 columns
+        actionPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
+        actionPanel.setBackground(new Color(240, 240, 240));
+
         JButton runButton = createStyledButton("Run");
         runButton.addActionListener(e -> autoSearch());
+        actionPanel.add(runButton);
 
         JButton resetButton = createStyledButton("Reset");
         resetButton.addActionListener(e -> {
             resetGrid();
             JOptionPane.showMessageDialog(null, "Grid has been reset.");
         });
+        actionPanel.add(resetButton);
 
         JButton startButton = createStyledButton("Set Start");
         startButton.addActionListener(e -> {
             setMouseState(NodeType.START);
             JOptionPane.showMessageDialog(null, "Click on a node to set it as the Start node.");
         });
+        actionPanel.add(startButton);
 
         JButton goalButton = createStyledButton("Set Goal");
         goalButton.addActionListener(e -> {
             setMouseState(NodeType.GOAL);
             JOptionPane.showMessageDialog(null, "Click on a node to set it as the Goal node.");
         });
+        actionPanel.add(goalButton);
 
         JButton solidButton = createStyledButton("Set Solid");
         solidButton.addActionListener(e -> {
             setMouseState(NodeType.SOLID);
             JOptionPane.showMessageDialog(null, "Click on nodes to set them as Solid.");
         });
+        actionPanel.add(solidButton);
 
         JButton openButton = createStyledButton("Set Open");
         openButton.addActionListener(e -> {
             setMouseState(NodeType.OPEN);
             JOptionPane.showMessageDialog(null, "Click on nodes to set them as Open.");
         });
+        actionPanel.add(openButton);
+
+// Settings Buttons Group
+        JPanel settingsPanel = new JPanel(new GridLayout(2, 2, 5, 5)); // 2 rows, 2 columns
+        settingsPanel.setBorder(BorderFactory.createTitledBorder("Settings"));
+        settingsPanel.setBackground(new Color(240, 240, 240));
 
         JButton fillSolidButton = createStyledButton("Fill Solid");
         fillSolidButton.addActionListener(e -> {
             activateFillSolidMode();
             JOptionPane.showMessageDialog(null, "Select 4 corner nodes to fill the area as Solid.");
         });
+        settingsPanel.add(fillSolidButton);
 
         JButton boundaryButton = createStyledButton("Boundary Distance");
         boundaryButton.addActionListener(e -> setBoundaryDistance());
+        settingsPanel.add(boundaryButton);
 
         JButton exportButton = createStyledButton("Export Field");
         exportButton.addActionListener(e -> exportField());
+        settingsPanel.add(exportButton);
 
         JButton importButton = createStyledButton("Import Field");
         importButton.addActionListener(e -> importField());
+        settingsPanel.add(importButton);
 
-        // Add buttons to button panel
-        buttonPanel.add(runButton);
-        buttonPanel.add(resetButton);
-        buttonPanel.add(startButton);
-        buttonPanel.add(goalButton);
-        buttonPanel.add(solidButton);
-        buttonPanel.add(openButton);
-        buttonPanel.add(fillSolidButton);
-        buttonPanel.add(boundaryButton);
-        buttonPanel.add(exportButton);
-        buttonPanel.add(importButton);
+// Add panels to the main button panel
+        buttonPanel.add(actionPanel);
+        buttonPanel.add(Box.createVerticalStrut(10)); // Spacer
+        buttonPanel.add(settingsPanel);
 
         // Split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gridPanel, buttonPanel);
