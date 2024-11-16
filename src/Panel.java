@@ -111,6 +111,12 @@ public class Panel extends JPanel {
         JButton boundaryButton = createStyledButton("Boundary Distance");
         boundaryButton.addActionListener(e -> setBoundaryDistance());
 
+        JButton exportButton = createStyledButton("Export Field");
+        exportButton.addActionListener(e -> exportField());
+
+        JButton importButton = createStyledButton("Import Field");
+        importButton.addActionListener(e -> importField());
+
         // Add buttons to button panel
         buttonPanel.add(runButton);
         buttonPanel.add(resetButton);
@@ -120,6 +126,8 @@ public class Panel extends JPanel {
         buttonPanel.add(openButton);
         buttonPanel.add(fillSolidButton);
         buttonPanel.add(boundaryButton);
+        buttonPanel.add(exportButton);
+        buttonPanel.add(importButton);
 
         // Split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gridPanel, buttonPanel);
@@ -216,6 +224,120 @@ public class Panel extends JPanel {
         JOptionPane.showMessageDialog(null, "Please select 4 corner nodes by clicking on them.");
         mouseState = NodeType.OPEN; // Temporarily disable other node modes
         selectedNodes.clear(); // Clear any previous selection
+    }
+
+    private void exportField() {
+        JFileChooser fileChooser = new JFileChooser();
+        int choice = fileChooser.showSaveDialog(this);
+
+        if (choice == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+
+            // Add .field extension if not present
+            if (!file.getName().toLowerCase().endsWith(".field")) {
+                file = new File(file.getAbsolutePath() + ".field");
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (Node node : nodes) {
+                    writer.write(node.col + "," + node.row + "," + node.type + "," +
+                            node.checked + "," + node.path + "\n");
+                }
+                JOptionPane.showMessageDialog(this, "Field exported successfully!", "Export Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Failed to export field.", "Export Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void importField() {
+        JFileChooser fileChooser = new JFileChooser();
+
+        // Add a file filter for .field files
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Field Files", "field"));
+
+        int choice = fileChooser.showOpenDialog(this);
+
+        if (choice == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                resetGrid(); // Clear the grid before importing
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    int col = Integer.parseInt(parts[0]);
+                    int row = Integer.parseInt(parts[1]);
+                    NodeType type = NodeType.valueOf(parts[2]);
+                    boolean checked = Boolean.parseBoolean(parts[3]);
+                    boolean path = Boolean.parseBoolean(parts[4]);
+
+                    Node node = getNodeAt(col, row);
+
+                    // Set the node's state based on the imported data
+                    switch (type) {
+                        case START:
+                            if (startNode != null) startNode.setAsOpen(); // Reset previous start node
+                            node.setAsStart();
+                            startNode = node;
+                            currentNode = node; // Set current node for pathfinding
+                            break;
+                        case GOAL:
+                            if (goalNode != null) goalNode.setAsOpen(); // Reset previous goal node
+                            node.setAsGoal();
+                            goalNode = node;
+                            break;
+                        case SOLID:
+                            node.setAsSolid();
+                            break;
+                        case BOUNDARY:
+                            node.setAsBoundary();
+                            break;
+                        case OPEN:
+                            node.setAsOpen();
+                            break;
+                    }
+
+                    // Restore additional flags
+                    node.checked = checked;
+                    node.path = path;
+                    if (path) {
+                        node.setAsPath(); // Visually mark path nodes
+                    }
+
+                    // Repaint the node
+                    node.repaint();
+                }
+
+                // Synchronize the internal state
+                synchronizeState();
+
+                JOptionPane.showMessageDialog(this, "Field imported successfully!", "Import Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException | IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this, "Failed to import field.", "Import Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void synchronizeState() {
+        // Clear open and checked lists
+        openList.clear();
+        checkedList.clear();
+
+        // Reset pathfinding attributes
+        goalReached = false;
+        step = 0;
+
+        // Recalculate costs for all nodes
+        setCostOnNodes();
+
+        // Ensure currentNode points to the startNode
+        currentNode = startNode;
+
+        // Add the startNode to the openList
+        if (startNode != null) {
+            openList.add(startNode);
+        }
     }
 
     private void handleFillSolid(Node clickedNode) {
@@ -453,9 +575,21 @@ public class Panel extends JPanel {
         repaint();
     }
 
+    private void clearPath() {
+        for (Node node : nodes) {
+            if (node.path) {
+                node.path = false; // Reset path flag
+                node.setAsOpen(); // Visually reset the node
+            }
+        }
+    }
+
     private void handleMouse(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) { // Left mouse click
             Node clickedNode = (Node) e.getSource();
+
+            // Clear previous path before making any modification
+            clearPath();
 
             // Check if filling a solid area
             if (mouseState == NodeType.OPEN && selectedNodes.size() < 4) {
@@ -492,7 +626,9 @@ public class Panel extends JPanel {
                     clickedNode.setAsOpen(); // Default case for other types
             }
         }
-        repaint(); // Repaint the grid after handling the mouse event
+
+        // Repaint the grid after handling the mouse event
+        repaint();
     }
 
     private void setMouseState(NodeType state) {
