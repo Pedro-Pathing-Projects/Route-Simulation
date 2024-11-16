@@ -252,8 +252,8 @@ public class Panel extends JPanel {
         // Apply heading difference as an additional cost factor (modify as needed for precision)
         double headingFactor = 1.0 + (angleDifference / Math.PI);  // Normalize between 1 and 2
 
+        // Increase cost for diagonal moves with a heading difference
         if (xDistance == 1 && yDistance == 1) {
-            // Diagonal move with heading factor
             node.gCost = (int) (1.4 * (xDistance + yDistance) * headingFactor);
         } else {
             // Horizontal/Vertical move
@@ -268,6 +268,8 @@ public class Panel extends JPanel {
         // F cost
         node.fCost = node.gCost + node.hCost;
     }
+
+
 
 
 
