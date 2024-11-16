@@ -146,8 +146,8 @@ public class Panel extends JPanel {
         buttonPanel.add(goalButton);
         buttonPanel.add(openButton);
         buttonPanel.add(solidButton);
-      //  buttonPanel.add(exportButton);
-       // buttonPanel.add(importButton);
+        //  buttonPanel.add(exportButton);
+        // buttonPanel.add(importButton);
         System.out.println(buttonPanel.getPreferredSize());
         this.add(buttonPanel, BorderLayout.EAST);
     }
@@ -260,19 +260,32 @@ public class Panel extends JPanel {
             if (col + 1 < maxCol) {
                 openNode(getNodeAt(col + 1, row));
             }
-            // Diagonal checks
+            // Diagonal checks with solid adjacency logic
             if (col - 1 >= 0 && row - 1 >= 0) {
-                openNode(getNodeAt(col - 1, row - 1));
+                // Top-left diagonal
+                if (getNodeAt(col - 1, row).type != NodeType.SOLID || getNodeAt(col, row - 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col - 1, row - 1));
+                }
             }
             if (col - 1 >= 0 && row + 1 < maxRow) {
-                openNode(getNodeAt(col - 1, row + 1));
+                // Bottom-left diagonal
+                if (getNodeAt(col - 1, row).type != NodeType.SOLID || getNodeAt(col, row + 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col - 1, row + 1));
+                }
             }
             if (col + 1 < maxCol && row - 1 >= 0) {
-                openNode(getNodeAt(col + 1, row - 1));
+                // Top-right diagonal
+                if (getNodeAt(col + 1, row).type != NodeType.SOLID || getNodeAt(col, row - 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col + 1, row - 1));
+                }
             }
             if (col + 1 < maxCol && row + 1 < maxRow) {
-                openNode(getNodeAt(col + 1, row + 1));
+                // Bottom-right diagonal
+                if (getNodeAt(col + 1, row).type != NodeType.SOLID || getNodeAt(col, row + 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col + 1, row + 1));
+                }
             }
+
 
             // Choose the best node with lowest F cost
             int bestNodeIndex = 0;
