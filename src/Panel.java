@@ -234,7 +234,7 @@ public class Panel extends JPanel {
 
     private void activateFillSolidMode() {
         JOptionPane.showMessageDialog(null, "Please select 4 corner nodes by clicking on them.");
-        mouseState = NodeType.OPEN; // Temporarily disable other node modes
+        mouseState = NodeType.SOLID; // Temporarily allow selecting nodes for solid fill
         selectedNodes.clear(); // Clear any previous selection
     }
 
@@ -321,7 +321,7 @@ public class Panel extends JPanel {
                     node.repaint();
                 }
 
-                // Synchronize the internal state
+                // Synchronize the state after importing
                 synchronizeState();
 
                 JOptionPane.showMessageDialog(this, "Field imported successfully!", "Import Success", JOptionPane.INFORMATION_MESSAGE);
@@ -340,13 +340,14 @@ public class Panel extends JPanel {
         goalReached = false;
         step = 0;
 
-        // Recalculate costs for all nodes
+        // Clear path visuals and recalculate costs for all nodes
+        clearPath();
         setCostOnNodes();
 
         // Ensure currentNode points to the startNode
         currentNode = startNode;
 
-        // Add the startNode to the openList
+        // Add the startNode to the openList if it exists
         if (startNode != null) {
             openList.add(startNode);
         }
@@ -367,22 +368,22 @@ public class Panel extends JPanel {
     private void markInteriorAsSolid() {
         if (selectedNodes.size() != 4) return;
 
-        // Determine the bounds of the rectangle
-        // Determine the bounds of the rectangle
         int minCol = selectedNodes.stream().mapToInt(node -> node.col).min().orElse(0);
-        int maxCol = selectedNodes.stream().mapToInt(node -> node.col).max().orElse(this.maxCol - 1); // Use 'this.maxCol'
+        int maxCol = selectedNodes.stream().mapToInt(node -> node.col).max().orElse(this.maxCol - 1);
         int minRow = selectedNodes.stream().mapToInt(node -> node.row).min().orElse(0);
-        int maxRow = selectedNodes.stream().mapToInt(node -> node.row).max().orElse(this.maxRow - 1); // Use 'this.maxRow'
+        int maxRow = selectedNodes.stream().mapToInt(node -> node.row).max().orElse(this.maxRow - 1);
 
-        // Mark all interior nodes as solid
         for (int row = minRow; row <= maxRow; row++) {
             for (int col = minCol; col <= maxCol; col++) {
                 Node node = getNodeAt(col, row);
-                if (!selectedNodes.contains(node)) { // Skip the selected corners
+                if (!selectedNodes.contains(node)) {
                     node.setAsSolid();
                 }
             }
         }
+
+        // Update costs after filling solid nodes
+        setCostOnNodes();
 
         JOptionPane.showMessageDialog(null, "Interior nodes have been marked as solid.");
     }
@@ -402,7 +403,9 @@ public class Panel extends JPanel {
         for (int row = 0; row < maxRow; row++) {
             for (int col = 0; col < maxCol; col++) {
                 Node node = getNodeAt(col, row);
-                getCost(node);
+                if (startNode != null && goalNode != null) {
+                    getCost(node);
+                }
             }
         }
     }
@@ -440,7 +443,6 @@ public class Panel extends JPanel {
             return;
         }
 
-        // Validate the start and goal nodes
         if (!canRobotOccupy(startNode)) {
             JOptionPane.showMessageDialog(null, "Start node is invalid for the robot size.");
             return;
@@ -451,8 +453,18 @@ public class Panel extends JPanel {
             return;
         }
 
-        currentNode = startNode;
+        // Clear previous path and reset state
+        clearPath();
+        openList.clear();
+        checkedList.clear();
+        goalReached = false;
+        step = 0;
+
+        // Recalculate costs for all nodes
         setCostOnNodes();
+
+        currentNode = startNode;
+        openList.add(startNode); // Add start node to open list
 
         while (!goalReached && step < 3000) {
             if (currentNode == null) {
@@ -466,8 +478,8 @@ public class Panel extends JPanel {
 
             // Check all 8 possible neighbors (including diagonals)
             int[][] directions = {
-                    {0, -1}, {0, 1}, {-1, 0}, {1, 0}, // Cardinal directions
-                    {-1, -1}, {1, -1}, {-1, 1}, {1, 1}  // Diagonal directions
+                    {0, -1}, {0, 1}, {-1, 0}, {1, 0},
+                    {-1, -1}, {1, -1}, {-1, 1}, {1, 1}
             };
 
             for (int[] dir : directions) {
@@ -560,12 +572,33 @@ public class Panel extends JPanel {
 
         while (current != startNode) {
             current = current.parent;
+
             if (current != startNode) {
-                current.setAsPath();
+                current.setAsPath(); // Visually mark as part of the path
+                current.type = NodeType.OPEN; // Keep it as an open node logically
             }
         }
 
         goalNode.setAsGoal();
+    }
+
+    private void resetPathfindingData() {
+        goalReached = false;
+        step = 0;
+        openList.clear();
+        checkedList.clear();
+
+        // Reset the path state for all nodes
+        for (Node node : nodes) {
+            if (node.path) {
+                node.setAsOpen();
+                node.path = false;
+            }
+            node.gCost = Integer.MAX_VALUE;
+            node.hCost = Integer.MAX_VALUE;
+            node.fCost = Integer.MAX_VALUE;
+            node.parent = null;
+        }
     }
 
     public void resetGrid() {
@@ -591,7 +624,7 @@ public class Panel extends JPanel {
         for (Node node : nodes) {
             if (node.path) {
                 node.path = false; // Reset path flag
-                node.setAsOpen(); // Visually reset the node
+                node.setAsOpen(); // Visually reset to open
             }
         }
     }
@@ -600,12 +633,21 @@ public class Panel extends JPanel {
         if (e.getButton() == MouseEvent.BUTTON1) { // Left mouse click
             Node clickedNode = (Node) e.getSource();
 
-            // Clear previous path before making any modification
-            clearPath();
+            if (mouseState == NodeType.SOLID && selectedNodes.size() < 4) {
+                if (!selectedNodes.contains(clickedNode)) {
+                    selectedNodes.add(clickedNode);
+                    clickedNode.setAsSolid();
+                }
 
-            // Check if filling a solid area
-            if (mouseState == NodeType.OPEN && selectedNodes.size() < 4) {
-                handleFillSolid(clickedNode);
+                if (selectedNodes.size() == 4) {
+                    markInteriorAsSolid();
+                    selectedNodes.clear();
+                }
+
+                // Update costs after modifying nodes
+                setCostOnNodes();
+
+                repaint();
                 return;
             }
 
@@ -615,17 +657,16 @@ public class Panel extends JPanel {
                 return;
             }
 
-            // Handle different mouse states
             switch (mouseState) {
                 case START:
-                    if (startNode != null && startNode != clickedNode) startNode.setAsOpen(); // Reset previous start node
+                    if (startNode != null && startNode != clickedNode) startNode.setAsOpen();
                     clickedNode.setAsStart();
                     startNode = clickedNode;
-                    currentNode = clickedNode; // Initialize current node
+                    currentNode = clickedNode;
                     break;
 
                 case GOAL:
-                    if (goalNode != null && goalNode != clickedNode) goalNode.setAsOpen(); // Reset previous goal node
+                    if (goalNode != null && goalNode != clickedNode) goalNode.setAsOpen();
                     clickedNode.setAsGoal();
                     goalNode = clickedNode;
                     break;
@@ -635,11 +676,13 @@ public class Panel extends JPanel {
                     break;
 
                 default:
-                    clickedNode.setAsOpen(); // Default case for other types
+                    clickedNode.setAsOpen();
             }
+
+            // Update costs after node change
+            setCostOnNodes();
         }
 
-        // Repaint the grid after handling the mouse event
         repaint();
     }
 
