@@ -25,7 +25,7 @@ public class Panel extends JPanel {
     final int maxCol = fieldInchesX / nodeInches;
     final int maxRow = fieldInchesY / nodeInches;
     final int nodeScreenSize = 25;
-    final int screenWidth = (nodeScreenSize * maxCol) + 405;
+    final int screenWidth = (nodeScreenSize * maxCol) + 380;
     final int screenHeight = (nodeScreenSize * maxRow);
 
     NodeType mouseState = NodeType.OPEN;
