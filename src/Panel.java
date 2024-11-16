@@ -34,6 +34,8 @@ public class Panel extends JPanel {
     int step = 0;
 
     ArrayList<Node> nodes = new ArrayList<>(maxCol * maxRow);
+    // Additional state to track selected nodes for the new feature
+    private ArrayList<Node> selectedNodes = new ArrayList<>();
     Node startNode, goalNode, currentNode;
     ArrayList<Node> openList = new ArrayList<>(), checkedList = new ArrayList<>();
     boolean goalReached = false;
@@ -77,6 +79,9 @@ public class Panel extends JPanel {
         JButton goalButton = new JButton("Goal");
         goalButton.addActionListener(e -> setMouseState(NodeType.GOAL));
 
+        JButton fillSolidButton = new JButton("Fill Solid");
+        fillSolidButton.addActionListener(e -> activateFillSolidMode());
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(runButton);
         buttonPanel.add(startButton);
@@ -84,6 +89,7 @@ public class Panel extends JPanel {
         buttonPanel.add(openButton);
         buttonPanel.add(solidButton);
         buttonPanel.add(resetButton);
+        buttonPanel.add(fillSolidButton);
 
         JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol)) {
             @Override
@@ -104,6 +110,47 @@ public class Panel extends JPanel {
         this.setLayout(new BorderLayout());
         this.add(gridPanel, BorderLayout.CENTER);
         this.add(buttonPanel, BorderLayout.EAST);
+    }
+
+    private void activateFillSolidMode() {
+        JOptionPane.showMessageDialog(null, "Please select 4 corner nodes by clicking on them.");
+        mouseState = NodeType.OPEN; // Temporarily disable other node modes
+        selectedNodes.clear(); // Clear any previous selection
+    }
+
+    private void handleFillSolid(Node clickedNode) {
+        if (selectedNodes.contains(clickedNode)) return;
+
+        selectedNodes.add(clickedNode);
+        clickedNode.setAsSolid();
+
+        if (selectedNodes.size() == 4) {
+            markInteriorAsSolid();
+            selectedNodes.clear(); // Clear the selection after filling
+        }
+    }
+
+    private void markInteriorAsSolid() {
+        if (selectedNodes.size() != 4) return;
+
+        // Determine the bounds of the rectangle
+        // Determine the bounds of the rectangle
+        int minCol = selectedNodes.stream().mapToInt(node -> node.col).min().orElse(0);
+        int maxCol = selectedNodes.stream().mapToInt(node -> node.col).max().orElse(this.maxCol - 1); // Use 'this.maxCol'
+        int minRow = selectedNodes.stream().mapToInt(node -> node.row).min().orElse(0);
+        int maxRow = selectedNodes.stream().mapToInt(node -> node.row).max().orElse(this.maxRow - 1); // Use 'this.maxRow'
+
+        // Mark all interior nodes as solid
+        for (int row = minRow; row <= maxRow; row++) {
+            for (int col = minCol; col <= maxCol; col++) {
+                Node node = getNodeAt(col, row);
+                if (!selectedNodes.contains(node)) { // Skip the selected corners
+                    node.setAsSolid();
+                }
+            }
+        }
+
+        JOptionPane.showMessageDialog(null, "Interior nodes have been marked as solid.");
     }
 
     private Node safeGetNodeAt(int col, int row) {
@@ -277,6 +324,12 @@ public class Panel extends JPanel {
     private void handleMouse(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
             Node clickedNode = (Node) e.getSource();
+
+            if (mouseState == NodeType.OPEN && selectedNodes.size() < 4) {
+                handleFillSolid(clickedNode);
+                return;
+            }
+
             switch (mouseState) {
                 case START:
                     if (startNode != null && startNode != clickedNode) startNode.setAsOpen();
