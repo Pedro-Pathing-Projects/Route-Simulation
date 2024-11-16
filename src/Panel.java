@@ -14,6 +14,7 @@ public class Panel extends JPanel {
     final int screenHeight = (nodeSize * maxRow);
 
     NodeType mouseState = NodeType.OPEN;
+    Image backgroundImage;
 
     int step = 0;
 
@@ -24,7 +25,7 @@ public class Panel extends JPanel {
 
     public Panel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
-        this.setBackground(Color.BLACK);
+        this.setBackground(Color.WHITE);
         this.setLayout(new GridLayout(maxRow, maxCol));
         this.addKeyListener(new KeyHandler(this));
         this.setFocusable(true);
@@ -129,13 +130,31 @@ public class Panel extends JPanel {
         this.setLayout(new BorderLayout());
 
 // Add the grid to the center of the Panel
-        JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol));
+        try {
+            backgroundImage = new ImageIcon("intothedeepfield.png").getImage();
+        } catch (Exception e) {
+            System.err.println("Background image not found.");
+            System.out.println("Using default background.");
+        }
+
+        JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol)){
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                }
+                repaint();
+            }
+        };
+
         for (int row = 0; row < maxRow; row++) {
             for (int col = 0; col < maxCol; col++) {
                 Node node = getNodeAt(col, row);
                 gridPanel.add(node);
             }
         }
+
         this.add(gridPanel, BorderLayout.CENTER);
 
 // Add the buttons to the east of the Panel
@@ -260,32 +279,31 @@ public class Panel extends JPanel {
             if (col + 1 < maxCol) {
                 openNode(getNodeAt(col + 1, row));
             }
-            // Diagonal checks with solid adjacency logic
+            // Diagonal checks with solid adjacency logic (updated for proper diagonal movement)
             if (col - 1 >= 0 && row - 1 >= 0) {
                 // Top-left diagonal
-                if (getNodeAt(col - 1, row).type != NodeType.SOLID || getNodeAt(col, row - 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col - 1, row - 1));
+                if (getNodeAt(col - 1, row).type != NodeType.SOLID && getNodeAt(col, row - 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col - 1, row - 1)); // Use cost of 1.4 for diagonal movement
                 }
             }
             if (col - 1 >= 0 && row + 1 < maxRow) {
                 // Bottom-left diagonal
-                if (getNodeAt(col - 1, row).type != NodeType.SOLID || getNodeAt(col, row + 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col - 1, row + 1));
+                if (getNodeAt(col - 1, row).type != NodeType.SOLID && getNodeAt(col, row + 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col - 1, row + 1)); // Use cost of 1.4 for diagonal movement
                 }
             }
             if (col + 1 < maxCol && row - 1 >= 0) {
                 // Top-right diagonal
-                if (getNodeAt(col + 1, row).type != NodeType.SOLID || getNodeAt(col, row - 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col + 1, row - 1));
+                if (getNodeAt(col + 1, row).type != NodeType.SOLID && getNodeAt(col, row - 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col + 1, row - 1)); // Use cost of 1.4 for diagonal movement
                 }
             }
             if (col + 1 < maxCol && row + 1 < maxRow) {
                 // Bottom-right diagonal
-                if (getNodeAt(col + 1, row).type != NodeType.SOLID || getNodeAt(col, row + 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col + 1, row + 1));
+                if (getNodeAt(col + 1, row).type != NodeType.SOLID && getNodeAt(col, row + 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col + 1, row + 1)); // Use cost of 1.4 for diagonal movement
                 }
             }
-
 
             // Choose the best node with lowest F cost
             int bestNodeIndex = 0;

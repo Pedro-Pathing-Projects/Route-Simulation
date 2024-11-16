@@ -11,7 +11,6 @@ public class Node extends JButton {
     public Node(int col, int row) {
         this.col = col;
         this.row = row;
-        setOpaque(false); // Make the background transparent
         setContentAreaFilled(false);
         setBorderPainted(false);
         setFocusable(false);
@@ -58,16 +57,12 @@ public class Node extends JButton {
     }
 
     public void setAsChecked() {
-        if (!NodeType.START.equals(type) && !NodeType.GOAL.equals(type)) {
-            setBackground(Color.orange);
-        }
         checked = true;
         repaint();
     }
 
     public void setAsPath() {
         path = true;
-        setBackground(Color.blue);
         repaint();
     }
 
@@ -79,6 +74,9 @@ public class Node extends JButton {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        super.setContentAreaFilled(false);
+        super.setBorderPainted(false);
+
         // Enable anti-aliasing for smoother circles
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -86,35 +84,36 @@ public class Node extends JButton {
         // Determine color based on the node type
         Color fillColor;
         
-        fillColor = Color.WHITE;
+        fillColor = new Color(213, 213, 213);
 
         if(type == NodeType.SOLID){
-            fillColor = Color.BLACK;
+            fillColor = new Color(77, 77, 77);
         }
 
         if(checked) {
-            fillColor = Color.ORANGE;
+        //    fillColor = new Color(255, 203, 132);
         }
 
         if (path) {
-            fillColor = Color.BLUE;
+            fillColor = new Color(96, 170, 199);
         }
 
         if(type == NodeType.START) {
-            fillColor = Color.GREEN;
+            fillColor = new Color(90, 175, 90);
         }
 
         if (type == NodeType.GOAL) {
-            fillColor = Color.RED;
+            fillColor = new Color(240, 78, 78);
         }
 
 
+
         // Get the circle's dimensions
-        int diameter = Math.min(getWidth() - 5, getHeight()) - 5; // Leave padding
+        int diameter = Math.min(getWidth(), getHeight()); // Leave padding
         int x = (getWidth() - diameter) / 2;
         int y = (getHeight() - diameter) / 2;
 
-        // Draw the circular center
+        //Draw the circular center
         g2.setColor(fillColor);
         g2.fillOval(x, y, diameter, diameter);
     }
