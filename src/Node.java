@@ -99,7 +99,7 @@ public class Node extends JButton {
         }
 
         if(type == NodeType.START) {
-            fillColor = new Color(90, 175, 90);
+            fillColor = new Color(132, 255, 132);
         }
 
         if (type == NodeType.GOAL) {

@@ -5,13 +5,29 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Panel extends JPanel {
-    final int maxCol = 36;
-    final int maxRow = 36;
-    final int nodeSize = 25;
-    final int screenWidth = (nodeSize * maxCol) + 333;
-    final int screenHeight = (nodeSize * maxRow);
+
+    //Robot
+    final int robotInchesX = 16;
+    final int robotInchesY = 13;
+    private double heading = Math.toRadians(0);
+
+
+    //Field
+    final int fieldInchesX = 144;
+    final int fieldInchesY = 144;
+    final int nodeInches = 4;
+    private final int clearanceX = robotInchesX / nodeInches;
+    private final int clearanceY = robotInchesY / nodeInches;
+
+    // Screen size
+    final int maxCol = fieldInchesX / nodeInches;
+    final int maxRow = fieldInchesY / nodeInches;
+    final int nodeScreenSize = 25;
+    final int screenWidth = (nodeScreenSize * maxCol) + 333;
+    final int screenHeight = (nodeScreenSize * maxRow);
 
     NodeType mouseState = NodeType.OPEN;
     Image backgroundImage;
@@ -64,7 +80,6 @@ public class Panel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Set the mouse state to start
                 setMouseState(NodeType.START);
-                printMouseState();
             }
         });
 
@@ -74,7 +89,6 @@ public class Panel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Set the mouse state to solid
                 setMouseState(NodeType.SOLID);
-                printMouseState();
             }
         });
 
@@ -85,7 +99,6 @@ public class Panel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Set the mouse state to open
                 setMouseState(NodeType.OPEN);
-                printMouseState();
             }
         });
 
@@ -95,7 +108,6 @@ public class Panel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Set the mouse state to goal
                 setMouseState(NodeType.GOAL);
-                printMouseState();
             }
         });
 
@@ -171,10 +183,6 @@ public class Panel extends JPanel {
         this.add(buttonPanel, BorderLayout.EAST);
     }
 
-    public void printMouseState() {
-        System.out.println("Mouse State: " + mouseState);
-    }
-
     private void exportNodes() throws IOException {
         BufferedWriter br = new BufferedWriter(new FileWriter("nodes.txt"));
         br.write(nodes.toString());
@@ -234,25 +242,33 @@ public class Panel extends JPanel {
     }
 
     private void getCost(Node node) {
-        // G cost
+        // G cost considering the heading
         int xDistance = Math.abs(node.col - startNode.col);
         int yDistance = Math.abs(node.row - startNode.row);
+
+        double angleToNode = Math.atan2(node.row - startNode.row, node.col - startNode.col);
+        double angleDifference = Math.abs(angleToNode - heading);
+
+        // Apply heading difference as an additional cost factor (modify as needed for precision)
+        double headingFactor = 1.0 + (angleDifference / Math.PI);  // Normalize between 1 and 2
+
         if (xDistance == 1 && yDistance == 1) {
-            // Diagonal move
-            node.gCost = (int) (1.4 * (xDistance + yDistance));
+            // Diagonal move with heading factor
+            node.gCost = (int) (1.4 * (xDistance + yDistance) * headingFactor);
         } else {
             // Horizontal/Vertical move
-            node.gCost = xDistance + yDistance;
+            node.gCost = (int) ((xDistance + yDistance) * headingFactor);
         }
 
-        // H cost
+        // H cost considering heading
         xDistance = Math.abs(node.col - goalNode.col);
         yDistance = Math.abs(node.row - goalNode.row);
-        node.hCost = xDistance + yDistance;
+        node.hCost = (int) ((xDistance + yDistance) * headingFactor);
 
         // F cost
         node.fCost = node.gCost + node.hCost;
     }
+
 
 
     public void autoSearch() {
@@ -266,7 +282,7 @@ public class Panel extends JPanel {
             checkedList.add(currentNode);
             openList.remove(currentNode);
 
-            // Check adjacent nodes (adding diagonal checks)
+            // Check adjacent nodes (considering heading)
             if (row - 1 >= 0) {
                 openNode(getNodeAt(col, row - 1));
             }
@@ -279,29 +295,26 @@ public class Panel extends JPanel {
             if (col + 1 < maxCol) {
                 openNode(getNodeAt(col + 1, row));
             }
-            // Diagonal checks with solid adjacency logic (updated for proper diagonal movement)
+
+            // Diagonal checks without blocking diagonal movement:
             if (col - 1 >= 0 && row - 1 >= 0) {
-                // Top-left diagonal
                 if (getNodeAt(col - 1, row).type != NodeType.SOLID && getNodeAt(col, row - 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col - 1, row - 1)); // Use cost of 1.4 for diagonal movement
-                }
-            }
-            if (col - 1 >= 0 && row + 1 < maxRow) {
-                // Bottom-left diagonal
-                if (getNodeAt(col - 1, row).type != NodeType.SOLID && getNodeAt(col, row + 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col - 1, row + 1)); // Use cost of 1.4 for diagonal movement
+                    openNode(getNodeAt(col - 1, row - 1)); // Top-left diagonal movement
                 }
             }
             if (col + 1 < maxCol && row - 1 >= 0) {
-                // Top-right diagonal
                 if (getNodeAt(col + 1, row).type != NodeType.SOLID && getNodeAt(col, row - 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col + 1, row - 1)); // Use cost of 1.4 for diagonal movement
+                    openNode(getNodeAt(col + 1, row - 1)); // Top-right diagonal movement
+                }
+            }
+            if (col - 1 >= 0 && row + 1 < maxRow) {
+                if (getNodeAt(col - 1, row).type != NodeType.SOLID && getNodeAt(col, row + 1).type != NodeType.SOLID) {
+                    openNode(getNodeAt(col - 1, row + 1)); // Bottom-left diagonal movement
                 }
             }
             if (col + 1 < maxCol && row + 1 < maxRow) {
-                // Bottom-right diagonal
                 if (getNodeAt(col + 1, row).type != NodeType.SOLID && getNodeAt(col, row + 1).type != NodeType.SOLID) {
-                    openNode(getNodeAt(col + 1, row + 1)); // Use cost of 1.4 for diagonal movement
+                    openNode(getNodeAt(col + 1, row + 1)); // Bottom-right diagonal movement
                 }
             }
 
@@ -338,6 +351,8 @@ public class Panel extends JPanel {
         //JOptionPane.showMessageDialog(null, "Search completed in " + duration + " milliseconds.");
     }
 
+
+
     private Node getBestNode() {
         Node bestNode = null;
         int bestFCost = Integer.MAX_VALUE;
@@ -355,7 +370,7 @@ public class Panel extends JPanel {
     }
 
     private void openNode(Node node) {
-        if (node == null || node.checked || node.type == NodeType.SOLID) {
+        if (node == null || node.checked || node.type == NodeType.SOLID || !canRobotOccupy(node)) {
             return;
         }
 
@@ -373,6 +388,37 @@ public class Panel extends JPanel {
             }
         }
     }
+
+    private boolean canRobotOccupy(Node centerNode) {
+        int halfWidth = Math.round((float) robotInchesX / (2 * nodeInches));
+        int halfHeight = Math.round((float) robotInchesY / (2 * nodeInches));
+
+        int startCol = centerNode.col - halfWidth;
+        int endCol = centerNode.col + halfWidth;
+        int startRow = centerNode.row - halfHeight;
+        int endRow = centerNode.row + halfHeight;
+
+        // Check if robot would clip outside the grid
+        if (startCol < 0 || endCol >= maxCol || startRow < 0 || endRow >= maxRow) {
+            return false;
+        }
+
+        // Check all nodes within the robot's bounds
+        for (int row = startRow; row <= endRow; row++) {
+            for (int col = startCol; col <= endCol; col++) {
+                Node node = getNodeAt(col, row);
+                if (node.type == NodeType.SOLID) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+
+
 
     private int calculateHCost(Node node) {
         int xDistance = Math.abs(node.col - goalNode.col);
@@ -418,20 +464,23 @@ public class Panel extends JPanel {
     }
 
     private void handleLeftClick(MouseEvent e) {
-        // Get the clicked node
         Node clickedNode = (Node) e.getSource();
 
         // Update the node based on the mouse state
         switch (mouseState) {
             case START:
-                //startNode.setAsOpen();
+                if (startNode != null && startNode != clickedNode) {
+                    startNode.setAsOpen(); // Reset the old start node
+                }
                 clickedNode.setAsStart();
                 startNode = clickedNode;
                 currentNode = clickedNode;
                 break;
 
             case GOAL:
-                //goalNode.setAsOpen();
+                if (goalNode != null && goalNode != clickedNode) {
+                    goalNode.setAsOpen(); // Reset the old goal node
+                }
                 clickedNode.setAsGoal();
                 goalNode = clickedNode;
                 break;
@@ -445,9 +494,9 @@ public class Panel extends JPanel {
                 break;
         }
 
-        // Repaint the panel to update the visual representation
-        repaint();
+        repaint(); // Refresh the UI
     }
+
 
 
     private void handleRightClick(MouseEvent e) {
@@ -471,4 +520,28 @@ public class Panel extends JPanel {
             handleRightClick(e);
         }
     }
+
+    public double getHeading() {
+        return heading;
+    }
+
+    public void setHeading(double newHeading) {
+        heading = newHeading % 360; // Normalize heading to 0-360 degrees
+    }
+
+
+    // Method to rotate robot
+    public void rotate(double radians) {
+        heading += radians;
+        heading = normalizeAngle(heading); // Keep heading within 0 to 2π range
+    }
+
+    // Normalize angle between 0 and 2π
+    private double normalizeAngle(double angle) {
+        return (angle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    }
+
+
+
+
 }
