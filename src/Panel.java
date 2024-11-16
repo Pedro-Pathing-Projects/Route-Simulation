@@ -256,16 +256,21 @@ public class Panel extends JPanel {
     }
 
     public void resetGrid() {
+        // Reset all attributes related to the search
         currentNode = null;
         startNode = null;
         goalNode = null;
         checkedList.clear();
         openList.clear();
+        goalReached = false;
+        step = 0;
 
+        // Reset all nodes
         for (Node n : nodes) {
             n.reset();
         }
 
+        // Force the grid to repaint
         repaint();
     }
 
