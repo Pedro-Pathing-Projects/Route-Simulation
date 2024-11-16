@@ -67,6 +67,11 @@ public class Node extends JButton {
         repaint();
     }
 
+    public void setAsBoundary() {
+        type = NodeType.BOUNDARY; // Set the node type to BOUNDARY
+        repaint();
+    }
+
     public boolean isMouseOver() {
         return getBounds().contains(MouseInfo.getPointerInfo().getLocation());
     }
@@ -84,22 +89,26 @@ public class Node extends JButton {
 
         // Determine color based on the node type
         Color fillColor;
-        
+
         fillColor = new Color(213, 213, 213);
 
-        if(type == NodeType.SOLID){
+        if (type == NodeType.SOLID) {
             fillColor = new Color(77, 77, 77);
         }
 
-        if(checked) {
-        //    fillColor = new Color(255, 203, 132);
+        if (type == NodeType.BOUNDARY) {
+            fillColor = Color.MAGENTA; // Example color for boundary nodes
+        }
+
+        if (checked) {
+            // fillColor = new Color(255, 203, 132);
         }
 
         if (path) {
             fillColor = new Color(96, 170, 199);
         }
 
-        if(type == NodeType.START) {
+        if (type == NodeType.START) {
             fillColor = new Color(132, 255, 132);
         }
 
@@ -107,14 +116,12 @@ public class Node extends JButton {
             fillColor = new Color(240, 78, 78);
         }
 
-
-
         // Get the circle's dimensions
         int diameter = Math.min(getWidth(), getHeight()); // Leave padding
         int x = (getWidth() - diameter) / 2;
         int y = (getHeight() - diameter) / 2;
 
-        //Draw the circular center
+        // Draw the circular center
         g2.setColor(fillColor);
         g2.fillOval(x, y, diameter, diameter);
     }

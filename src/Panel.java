@@ -82,6 +82,11 @@ public class Panel extends JPanel {
         JButton fillSolidButton = new JButton("Fill Solid");
         fillSolidButton.addActionListener(e -> activateFillSolidMode());
 
+        // Add a new button to set boundary distance
+        JButton boundaryDistanceButton = new JButton("Boundary Distance");
+        boundaryDistanceButton.addActionListener(e -> setBoundaryDistance());
+
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(runButton);
         buttonPanel.add(startButton);
@@ -90,6 +95,7 @@ public class Panel extends JPanel {
         buttonPanel.add(solidButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(fillSolidButton);
+        buttonPanel.add(boundaryDistanceButton);
 
         JPanel gridPanel = new JPanel(new GridLayout(maxRow, maxCol)) {
             @Override
@@ -110,6 +116,60 @@ public class Panel extends JPanel {
         this.setLayout(new BorderLayout());
         this.add(gridPanel, BorderLayout.CENTER);
         this.add(buttonPanel, BorderLayout.EAST);
+    }
+
+    private void setBoundaryDistance() {
+        String input = JOptionPane.showInputDialog(
+                null,
+                "Enter the boundary distance (in nodes):",
+                "Boundary Distance",
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        // Validate input
+        if (input == null || input.isEmpty()) return; // User cancelled input
+        int distance;
+        try {
+            distance = Integer.parseInt(input);
+            if (distance <= 0) throw new NumberFormatException();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Invalid input. Please enter a positive integer.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        // Mark nodes within the boundary distance
+        for (Node node : nodes) {
+            if (node.type == NodeType.SOLID) {
+                for (int row = node.row - distance; row <= node.row + distance; row++) {
+                    for (int col = node.col - distance; col <= node.col + distance; col++) {
+                        // Ensure the node is within bounds
+                        Node boundaryNode = safeGetNodeAt(col, row);
+                        if (boundaryNode != null && boundaryNode.type == NodeType.OPEN) {
+                            double dist = Math.sqrt(
+                                    Math.pow(node.row - row, 2) + Math.pow(node.col - col, 2)
+                            );
+                            if (dist <= distance) {
+                                boundaryNode.setAsBoundary(); // Visual distinction
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        JOptionPane.showMessageDialog(
+                null,
+                "Boundary nodes have been marked as boundary.",
+                "Boundary Set",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        repaint(); // Refresh the grid
     }
 
     private void activateFillSolidMode() {
@@ -185,11 +245,35 @@ public class Panel extends JPanel {
         yDistance = Math.abs(node.row - goalNode.row);
         node.hCost = (int) ((xDistance + yDistance) * headingFactor);
         node.fCost = node.gCost + node.hCost;
+
+        if (node.type == NodeType.SOLID || node.type == NodeType.BOUNDARY) {
+            node.gCost = Integer.MAX_VALUE;
+            node.hCost = Integer.MAX_VALUE;
+            node.fCost = Integer.MAX_VALUE;
+            return;
+        }
+        if (!canRobotOccupy(node)) {
+            node.gCost = Integer.MAX_VALUE;
+            node.hCost = Integer.MAX_VALUE;
+            node.fCost = Integer.MAX_VALUE;
+            return;
+        }
     }
 
     public void autoSearch() {
         if (startNode == null || goalNode == null) {
             JOptionPane.showMessageDialog(null, "Please set both a start and goal node before running the search.");
+            return;
+        }
+
+        // Validate the start and goal nodes
+        if (!canRobotOccupy(startNode)) {
+            JOptionPane.showMessageDialog(null, "Start node is invalid for the robot size.");
+            return;
+        }
+
+        if (!canRobotOccupy(goalNode)) {
+            JOptionPane.showMessageDialog(null, "Goal node is invalid for the robot size.");
             return;
         }
 
@@ -217,7 +301,10 @@ public class Panel extends JPanel {
                 int neighborRow = currentNode.row + dir[1];
 
                 if (neighborCol >= 0 && neighborCol < maxCol && neighborRow >= 0 && neighborRow < maxRow) {
-                    openNode(getNodeAt(neighborCol, neighborRow));
+                    Node neighborNode = getNodeAt(neighborCol, neighborRow);
+                    if (neighborNode != null && neighborNode.type != NodeType.SOLID && neighborNode.type != NodeType.BOUNDARY) {
+                        openNode(neighborNode);
+                    }
                 }
             }
 
@@ -266,27 +353,32 @@ public class Panel extends JPanel {
     }
 
     private boolean canRobotOccupy(Node centerNode) {
-        int halfWidth = Math.round((float) robotInchesX / (2 * nodeInches));
-        int halfHeight = Math.round((float) robotInchesY / (2 * nodeInches));
+        // Calculate the half-width and half-height of the robot in terms of nodes
+        int halfWidth = (int) Math.ceil((float) robotInchesX / (2 * nodeInches));
+        int halfHeight = (int) Math.ceil((float) robotInchesY / (2 * nodeInches));
 
-        int startCol = centerNode.col - halfWidth;
-        int endCol = centerNode.col + halfWidth;
-        int startRow = centerNode.row - halfHeight;
-        int endRow = centerNode.row + halfHeight;
+        // Determine the bounds based on the center node
+        int startCol = centerNode.col - halfWidth + 1; // Adjust bounds to center-based calculation
+        int endCol = centerNode.col + halfWidth - 1;
+        int startRow = centerNode.row - halfHeight + 1;
+        int endRow = centerNode.row + halfHeight - 1;
 
+        // Ensure the boundaries are within grid limits
         if (startCol < 0 || endCol >= maxCol || startRow < 0 || endRow >= maxRow) {
-            return false;
+            return false; // Robot is out of bounds
         }
 
+        // Check all nodes within the robot's area
         for (int row = startRow; row <= endRow; row++) {
             for (int col = startCol; col <= endCol; col++) {
-                if (getNodeAt(col, row).type == NodeType.SOLID) {
-                    return false;
+                Node node = getNodeAt(col, row);
+                if (node.type == NodeType.SOLID || node.type == NodeType.BOUNDARY) {
+                    return false; // Robot overlaps with an obstacle or boundary
                 }
             }
         }
 
-        return true;
+        return true; // Robot can occupy this space
     }
 
     private void trackPath() {
@@ -327,6 +419,11 @@ public class Panel extends JPanel {
 
             if (mouseState == NodeType.OPEN && selectedNodes.size() < 4) {
                 handleFillSolid(clickedNode);
+                return;
+            }
+
+            if (clickedNode.type == NodeType.BOUNDARY) {
+                JOptionPane.showMessageDialog(null, "Cannot modify boundary nodes.");
                 return;
             }
 

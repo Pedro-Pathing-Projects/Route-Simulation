@@ -2,5 +2,6 @@ enum NodeType {
     OPEN,
     SOLID,
     START,
-    GOAL
+    GOAL,
+    BOUNDARY // Add this to the NodeType enum
 }
