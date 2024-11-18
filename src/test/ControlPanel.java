@@ -5,6 +5,9 @@ import java.awt.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import static test.ImageBackgroundGrid.PIXELS_PER_INCH;
+import static test.ImageBackgroundGrid.SCREEN_SIZE;
+
 public class ControlPanel extends JPanel {
     private JTextField startXField, startYField, endXField, endYField;
     private ImageBackgroundGrid gridPanel;
@@ -51,7 +54,7 @@ public class ControlPanel extends JPanel {
                 try {
                     int startX = Integer.parseInt(startXField.getText());
                     int startY = Integer.parseInt(startYField.getText());
-                    gridPanel.getStartPoint().setLocation(startX, startY);
+                    gridPanel.getStartPoint().setLocation(startX, inversedY(startY));
                     gridPanel.repaint();
                 } catch (NumberFormatException ignored) { }
             }
@@ -77,7 +80,7 @@ public class ControlPanel extends JPanel {
                 try {
                     int endX = Integer.parseInt(endXField.getText());
                     int endY = Integer.parseInt(endYField.getText());
-                    gridPanel.getEndPoint().setLocation(endX, endY);
+                    gridPanel.getEndPoint().setLocation(endX, inversedY(endY));
                     gridPanel.repaint();
                 } catch (NumberFormatException ignored) { }
             }
@@ -85,15 +88,33 @@ public class ControlPanel extends JPanel {
     }
 
     // Method to update the coordinates in the control panel text fields automatically
-    public void updateCoordinates(int startX, int startY, int endX, int endY) {
-        startXField.setText(String.valueOf(startX));
-        startYField.setText(String.valueOf(startY));
-        endXField.setText(String.valueOf(endX));
-        endYField.setText(String.valueOf(endY));
+    public void updateCoordinates(double startXInches, double startYInches, double endXInches, double endYInches) {
+        startXField.setText(String.format("%.2f", startXInches));
+        startYField.setText(String.format("%.2f", inversedYInches(startYInches)));
+        endXField.setText(String.format("%.2f", endXInches));
+        endYField.setText(String.format("%.2f", inversedYInches(endYInches)));
     }
+
 
     // Set the grid panel reference
     public void setGridPanel(ImageBackgroundGrid gridPanel) {
         this.gridPanel = gridPanel;
+    }
+
+    public static double inversedY(double y) {
+        return SCREEN_SIZE- y;
+    }
+
+
+    public static double inversedYInches(double y) {
+        return pixelsToInches(SCREEN_SIZE) - y;
+    }
+
+    private static double inchesToPixels(int pixels) {
+        return pixels / PIXELS_PER_INCH;
+    }
+
+    private static double pixelsToInches(int pixels) {
+        return pixels / PIXELS_PER_INCH;
     }
 }

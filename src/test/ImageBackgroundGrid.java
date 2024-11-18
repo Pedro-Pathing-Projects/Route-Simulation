@@ -10,9 +10,9 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class ImageBackgroundGrid extends JPanel {
-    private static final int SCREEN_SIZE = 1000; // Fixed screen size (1000x1000 pixels)
-    private static final int GRID_INCHES = 144; // The grid represents 144x144 inches
-    private static final double PIXELS_PER_INCH = (double) SCREEN_SIZE / GRID_INCHES; // Pixels per inch
+    public static final int SCREEN_SIZE = 960; // Fixed screen size (1000x1000 pixels)
+    public static final int GRID_INCHES = 144; // The grid represents 144x144 inches
+    public static final double PIXELS_PER_INCH = (double) SCREEN_SIZE / GRID_INCHES; // Pixels per inch
 
     private static final int POINT_RADIUS = 7; // Radius of the draggable point in pixels
     private Point startPoint; // The start point
@@ -58,20 +58,27 @@ public class ImageBackgroundGrid extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (draggedPoint != null) {
+
                     // Update the dragged point's position
                     draggedPoint.x = e.getX();
                     draggedPoint.y = e.getY();
 
-                    // Snap to grid (optional)
-                    draggedPoint.x = (int) (Math.round(draggedPoint.x / PIXELS_PER_INCH) * PIXELS_PER_INCH);
-                    draggedPoint.y = (int) (Math.round(draggedPoint.y / PIXELS_PER_INCH) * PIXELS_PER_INCH);
-
                     repaint();
 
-                    // Update control panel's text fields automatically
-                    controlPanel.updateCoordinates(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+                    // Update control panel's text fields automatically (convert from pixels to inches)
+                    controlPanel.updateCoordinates(
+                            pixelsToInches(startPoint.x), pixelsToInches(startPoint.y),
+                            pixelsToInches(endPoint.x), pixelsToInches(endPoint.y)
+                    );
                 }
             }
+
+            // Helper method to convert from pixels to inches
+            private double pixelsToInches(int pixels) {
+                return pixels / PIXELS_PER_INCH;
+            }
+
+
         };
 
         addMouseListener(mouseAdapter);
