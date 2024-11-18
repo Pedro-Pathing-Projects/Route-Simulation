@@ -5,12 +5,12 @@ import java.awt.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import static test.ImageBackgroundGrid.PIXELS_PER_INCH;
-import static test.ImageBackgroundGrid.SCREEN_SIZE;
+import static test.GridPanel.PIXELS_PER_INCH;
+import static test.GridPanel.SCREEN_SIZE;
 
 public class ControlPanel extends JPanel {
     private JTextField startXField, startYField, endXField, endYField;
-    private ImageBackgroundGrid gridPanel;
+    private GridPanel gridPanel;
 
     public ControlPanel() {
         // This will be set after creation
@@ -50,7 +50,7 @@ public class ControlPanel extends JPanel {
                 updateStartCoordinates();
             }
 
-            private void updateStartCoordinates() {
+            public void updateStartCoordinates() {
                 try {
                     int startX = Integer.parseInt(startXField.getText());
                     int startY = Integer.parseInt(startYField.getText());
@@ -76,7 +76,7 @@ public class ControlPanel extends JPanel {
                 updateEndCoordinates();
             }
 
-            private void updateEndCoordinates() {
+            public void updateEndCoordinates() {
                 try {
                     int endX = Integer.parseInt(endXField.getText());
                     int endY = Integer.parseInt(endYField.getText());
@@ -97,7 +97,7 @@ public class ControlPanel extends JPanel {
 
 
     // Set the grid panel reference
-    public void setGridPanel(ImageBackgroundGrid gridPanel) {
+    public void setGridPanel(GridPanel gridPanel) {
         this.gridPanel = gridPanel;
     }
 
@@ -110,8 +110,8 @@ public class ControlPanel extends JPanel {
         return pixelsToInches(SCREEN_SIZE) - y;
     }
 
-    private static double inchesToPixels(int pixels) {
-        return pixels / PIXELS_PER_INCH;
+    private static double inchesToPixels(int inches) {
+        return inches * PIXELS_PER_INCH;
     }
 
     private static double pixelsToInches(int pixels) {

@@ -1,5 +1,7 @@
 package test;
 
+import org.w3c.dom.css.Rect;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -9,20 +11,22 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class ImageBackgroundGrid extends JPanel {
+public class GridPanel extends JPanel {
     public static final int SCREEN_SIZE = 960; // Fixed screen size (1000x1000 pixels)
     public static final int GRID_INCHES = 144; // The grid represents 144x144 inches
     public static final double PIXELS_PER_INCH = (double) SCREEN_SIZE / GRID_INCHES; // Pixels per inch
 
     private static final int POINT_RADIUS = 7; // Radius of the draggable point in pixels
     private Point startPoint; // The start point
-    private Point endPoint; // The end point
+    private Point endPoint;// The end point
+
+    private Rectangle sub = new Rectangle(inchesToPixels(48), inchesToPixels(48),inchesToPixels(48),inchesToPixels(48));
 
     private BufferedImage backgroundImage; // The background image
     private ControlPanel controlPanel; // Reference to the ControlPanel to update the fields
 
-    public ImageBackgroundGrid(String imagePath, ControlPanel controlPanel) {
-        this.controlPanel = controlPanel; // Initialize the control panel reference
+    public GridPanel(String imagePath, ControlPanel controlPanel) {
+        this.controlPanel = controlPanel;
 
         // Initialize the draggable points (startPoint and endPoint)
         startPoint = new Point(SCREEN_SIZE / 4, SCREEN_SIZE / 2); // Start point at 1/4th of the screen
@@ -100,6 +104,11 @@ public class ImageBackgroundGrid extends JPanel {
 
         g.setColor(Color.RED); // End point color
         g.fillOval(endPoint.x - POINT_RADIUS, endPoint.y - POINT_RADIUS, POINT_RADIUS * 2, POINT_RADIUS * 2);
+
+        g.setColor(new Color(147, 147, 147, 72));
+        g.fillRect(sub.x,sub.y,sub.width,sub.height);
+
+        drawLine(g,startPoint.x,startPoint.y, endPoint.x,endPoint.y);
     }
 
     public Point getStartPoint() {
@@ -108,5 +117,15 @@ public class ImageBackgroundGrid extends JPanel {
 
     public Point getEndPoint() {
         return endPoint;
+    }
+
+    public void drawLine(Graphics g, int x1, int y1, int x2,int y2) {
+        g.setColor(Color.blue);
+        g.drawLine(x1,y1,x2,y2);
+
+    }
+
+    private static int inchesToPixels(int inches) {
+        return (int)(inches * PIXELS_PER_INCH);
     }
 }

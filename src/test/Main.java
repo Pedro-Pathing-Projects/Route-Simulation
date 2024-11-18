@@ -12,7 +12,7 @@ public class Main {
 
         // Create the control panel first
         ControlPanel controlPanel = new ControlPanel();
-        ImageBackgroundGrid panel = new ImageBackgroundGrid(imagePath, controlPanel); // Pass controlPanel to the grid
+        GridPanel panel = new GridPanel(imagePath, controlPanel); // Pass controlPanel to the grid
 
         panel.setPreferredSize(new Dimension(1000, 960));
 
