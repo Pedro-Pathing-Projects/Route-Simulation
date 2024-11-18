@@ -14,7 +14,6 @@ public class Main {
         ControlPanel controlPanel = new ControlPanel();
         ImageBackgroundGrid panel = new ImageBackgroundGrid(imagePath, controlPanel); // Pass controlPanel to the grid
 
-        // Set the panel size to 1000x1000 pixels
         panel.setPreferredSize(new Dimension(1000, 960));
 
         // Set the layout of the frame
