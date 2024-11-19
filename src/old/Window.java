@@ -1,3 +1,5 @@
+package old;
+
 import javax.swing.*;
 
 public class Window {

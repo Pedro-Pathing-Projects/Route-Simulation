@@ -1,11 +1,10 @@
+package old;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class Panel extends JPanel {
 
@@ -288,24 +287,24 @@ public class Panel extends JPanel {
 
                     // Set the node's state based on the imported data
                     switch (type) {
-                        case START:
+                        case NodeType.START:
                             if (startNode != null) startNode.setAsOpen(); // Reset previous start node
                             node.setAsStart();
                             startNode = node;
                             currentNode = node; // Set current node for pathfinding
                             break;
-                        case GOAL:
+                        case NodeType.GOAL:
                             if (goalNode != null) goalNode.setAsOpen(); // Reset previous goal node
                             node.setAsGoal();
                             goalNode = node;
                             break;
-                        case SOLID:
+                        case NodeType.SOLID:
                             node.setAsSolid();
                             break;
-                        case BOUNDARY:
+                        case NodeType.BOUNDARY:
                             node.setAsBoundary();
                             break;
-                        case OPEN:
+                        case NodeType.OPEN:
                             node.setAsOpen();
                             break;
                     }
@@ -658,20 +657,20 @@ public class Panel extends JPanel {
             }
 
             switch (mouseState) {
-                case START:
+                case NodeType.START:
                     if (startNode != null && startNode != clickedNode) startNode.setAsOpen();
                     clickedNode.setAsStart();
                     startNode = clickedNode;
                     currentNode = clickedNode;
                     break;
 
-                case GOAL:
+                case NodeType.GOAL:
                     if (goalNode != null && goalNode != clickedNode) goalNode.setAsOpen();
                     clickedNode.setAsGoal();
                     goalNode = clickedNode;
                     break;
 
-                case SOLID:
+                case NodeType.SOLID:
                     clickedNode.setAsSolid();
                     break;
 

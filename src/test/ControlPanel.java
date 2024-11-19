@@ -5,9 +5,6 @@ import java.awt.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import static test.GridPanel.PIXELS_PER_INCH;
-import static test.GridPanel.SCREEN_SIZE;
-
 public class ControlPanel extends JPanel {
     private JTextField startXField, startYField, endXField, endYField;
     private GridPanel gridPanel;
@@ -102,19 +99,19 @@ public class ControlPanel extends JPanel {
     }
 
     public static double inversedY(double y) {
-        return SCREEN_SIZE- y;
+        return GridPanel.SCREEN_SIZE- y;
     }
 
 
     public static double inversedYInches(double y) {
-        return pixelsToInches(SCREEN_SIZE) - y;
+        return pixelsToInches(GridPanel.SCREEN_SIZE) - y;
     }
 
     private static double inchesToPixels(int inches) {
-        return inches * PIXELS_PER_INCH;
+        return inches * GridPanel.PIXELS_PER_INCH;
     }
 
     private static double pixelsToInches(int pixels) {
-        return pixels / PIXELS_PER_INCH;
+        return pixels / GridPanel.PIXELS_PER_INCH;
     }
 }
