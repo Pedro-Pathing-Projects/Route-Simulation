@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.PriorityQueue;
 import javax.imageio.ImageIO;
 
@@ -98,20 +99,21 @@ public class GridPanel extends JPanel {
 
         Point start = startPoint;
         Point goal = endPoint;
-
         openSet.add(new Node(start.x, start.y, null, 0, heuristic(start, goal)));
 
         while (!openSet.isEmpty()) {
             Node current = openSet.poll();
-            if (visited[current.x][current.y]) continue;
+            if (visited[current.x][current.y]) continue; // Skip visited nodes
             visited[current.x][current.y] = true;
 
+            // Goal check
             if (current.x == goal.x && current.y == goal.y) {
                 reconstructPath(current);
-                smoothPath(); // Smooth the reconstructed path
+                smoothPath(); // Call smoothing after path construction
                 return;
             }
 
+            // Expand neighbors
             for (Node neighbor : getNeighbors(current, goal)) {
                 if (!visited[neighbor.x][neighbor.y] && isOutsideAllowedRange(neighbor.x, neighbor.y)) {
                     openSet.add(neighbor);
@@ -125,7 +127,6 @@ public class GridPanel extends JPanel {
 
     private void smoothPath() {
         if (path.size() < 3) return; // Not enough points to smooth
-
         ArrayList<Point> smoothedPath = new ArrayList<>();
         smoothedPath.add(path.get(0)); // Add the starting point
 
